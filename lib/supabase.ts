@@ -1,7 +1,13 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// 懒加载 Supabase 客户端，避免构建时检查环境变量
+// 使用 getter 实现懒加载，避免构建时检查环境变量
+let _supabase: SupabaseClient | null = null;
+
 function getSupabase(): SupabaseClient {
+  if (_supabase) {
+    return _supabase;
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -9,10 +15,15 @@ function getSupabase(): SupabaseClient {
     throw new Error('缺少 Supabase 环境变量。请在 .env.local 中设置 NEXT_PUBLIC_SUPABASE_URL 和 NEXT_PUBLIC_SUPABASE_ANON_KEY');
   }
 
-  return createClient(supabaseUrl, supabaseAnonKey);
+  _supabase = createClient(supabaseUrl, supabaseAnonKey);
+  return _supabase;
 }
 
-export const supabase = getSupabase();
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(target, prop) {
+    return getSupabase()[prop as keyof SupabaseClient];
+  },
+});
 
 // 数据库类型定义
 export interface City {
