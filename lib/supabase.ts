@@ -1,13 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// 懒加载 Supabase 客户端，避免构建时检查环境变量
+function getSupabase(): SupabaseClient {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('缺少 Supabase 环境变量。请在 .env.local 中设置 NEXT_PUBLIC_SUPABASE_URL 和 NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('缺少 Supabase 环境变量。请在 .env.local 中设置 NEXT_PUBLIC_SUPABASE_URL 和 NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey);
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = getSupabase();
 
 // 数据库类型定义
 export interface City {
